@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="torch.optim 函数优化器1torch.optim.Optimizer(params(iterable), defaults(dict))  Optimizer构建方式：传入Variable对象的iterable，设置optimizer的参数选项，比如学习率，权重衰减等等 12optimizer &#x3D; optim.SGD(model.parameters(), lr &#x3D; 0.01, mome">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Optimizer and Learning Rate">
+<meta property="og:url" content="http://example.com/2021/11/08/Optimizer%20and%20Learning%20Rate/index.html">
+<meta property="og:site_name" content="Ziqing GU">
+<meta property="og:description" content="torch.optim 函数优化器1torch.optim.Optimizer(params(iterable), defaults(dict))  Optimizer构建方式：传入Variable对象的iterable，设置optimizer的参数选项，比如学习率，权重衰减等等 12optimizer &#x3D; optim.SGD(model.parameters(), lr &#x3D; 0.01, mome">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-11-08T04:11:09.379Z">
+<meta property="article:modified_time" content="2021-12-02T09:19:23.804Z">
+<meta property="article:author" content="Gooqi">
+<meta property="article:tag" content="pytorch">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/11/08/Optimizer%20and%20Learning%20Rate/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Optimizer and Learning Rate | Ziqing GU</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ziqing GU</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Per Aspera Ad Astra</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/11/08/Optimizer%20and%20Learning%20Rate/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Gooqi">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ziqing GU">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Optimizer and Learning Rate
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2021-11-08 12:11:09" itemprop="dateCreated datePublished" datetime="2021-11-08T12:11:09+08:00">2021-11-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-12-02 17:19:23" itemprop="dateModified" datetime="2021-12-02T17:19:23+08:00">2021-12-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Code-tips/" itemprop="url" rel="index"><span itemprop="name">Code tips</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="torch-optim-函数优化器"><a href="#torch-optim-函数优化器" class="headerlink" title="torch.optim 函数优化器"></a>torch.optim 函数优化器</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">torch.optim.Optimizer(params(iterable), defaults(dict))</span><br></pre></td></tr></table></figure>
+
+<h3 id="Optimizer构建方式："><a href="#Optimizer构建方式：" class="headerlink" title="Optimizer构建方式："></a>Optimizer构建方式：</h3><p>传入<code>Variable</code>对象的iterable，设置optimizer的参数选项，比如学习率，权重衰减等等</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">optimizer = optim.SGD(model.parameters(), lr = 0.01, momentum=0.9)</span><br><span class="line">optimizer = optim.Adam([var1, var2], lr = 0.0001)</span><br></pre></td></tr></table></figure>
+
+<p>传入<code>dict</code>的iterable，每一个dict都分别定义了一组参数，并且包含一个<code>param</code>键，这个键对应参数的列表。其他的键应该optimizer所接受的其他参数的关键字相匹配，并且会被用于对这组参数的优化。【可以用来指定每一层的学习率】</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">optim.SGD([&#123;&#x27;params&#x27;: model.base.parameters()&#125;,</span><br><span class="line">            &#123;&#x27;params&#x27;: model.classifier.parameters(), &#x27;lr&#x27;: 1e-3&#125;</span><br><span class="line">            ], lr=1e-2, momentum=0.9)</span><br></pre></td></tr></table></figure>
+
+<p>optimizer通过param_group管理参数组，param_group中保存了参数组及其对应的学习率和动量等</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">model = AlexNet()</span><br><span class="line">optimizer = optim.SGD(params = model.parameters(), lr = 10)</span><br><span class="line">lr = optimizer.param_groups[&#x27;lr&#x27;]</span><br></pre></td></tr></table></figure>
+
+<h3 id="Optimizer使用方式："><a href="#Optimizer使用方式：" class="headerlink" title="Optimizer使用方式："></a>Optimizer使用方式：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">optimizer.zero_grad()  # 梯度清零</span><br><span class="line">output = model(input)</span><br><span class="line">loss = loss_fn(output, target)</span><br><span class="line">loss.backward()</span><br><span class="line">optimizer.step()   # 单步优化</span><br></pre></td></tr></table></figure>
+
+<h3 id="Optimizer参数："><a href="#Optimizer参数：" class="headerlink" title="Optimizer参数："></a>Optimizer参数：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">optimizer.param_groups： </span><br><span class="line">长度为6的字典，包括[‘amsgrad&#x27;, ‘params&#x27;, ‘lr&#x27;, ‘betas&#x27;, ‘weight_decay&#x27;, ‘eps&#x27;]这6个参数</span><br><span class="line">其中，‘params&#x27;是optimizer中包含的网络参数</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="学习率调整方式："><a href="#学习率调整方式：" class="headerlink" title="学习率调整方式："></a>学习率调整方式：</h2><p><strong>学习率的调整需要应用在优化器参数更新之后</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">optimizer = torch.optim.Adam(...) #选择一种优化器</span><br><span class="line">scheduler = torch.optim.lr_scheduler.... # 选择一种动态调整学习率的方法，可以是下面几种之一</span><br><span class="line">for epoch in range(100):</span><br><span class="line">	train(...)</span><br><span class="line">	validate(...)</span><br><span class="line"></span><br><span class="line">optimizer.step()</span><br><span class="line">scheduler.step() # 需要在优化器参数更新之后再动态调整学习率</span><br></pre></td></tr></table></figure>
+
+<h3 id="学习率调整策略分为三大类，分别是"><a href="#学习率调整策略分为三大类，分别是" class="headerlink" title="学习率调整策略分为三大类，分别是"></a>学习率调整策略分为三大类，分别是</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">a. 有序调整：等间隔调整(Step)，按需调整学习率(MultiStep)，指数衰减调整(Exponential)和 余弦退火CosineAnnealing。</span><br><span class="line">b. 自适应调整：自适应调整学习率 ReduceLROnPlateau。</span><br><span class="line">c. 自定义调整：自定义调整学习率 LambdaLR。</span><br></pre></td></tr></table></figure>
+
+<h4 id="等间隔调整学习率-StepLR："><a href="#等间隔调整学习率-StepLR：" class="headerlink" title="等间隔调整学习率 StepLR："></a>等间隔调整学习率 StepLR：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">torch.optim.lr_scheduler.StepLR(optimizer, step_size, gamma=0.1, last_epoch=-1)</span><br><span class="line"># 参数</span><br><span class="line">step_size(int)- 学习率下降间隔数，若为 30，则会在 30、 60、 90…个 step 时，将学习率调整为 lr*gamma。</span><br><span class="line">gamma(float)- 学习率调整倍数，默认为 0.1 倍，即下降 10 倍。</span><br><span class="line">last_epoch(int)- 上一个 epoch 数，这个变量用来指示学习率是否需要调整。当last_epoch 符合设定的间隔时，就会对学习率进行调整。当为-1 时，学习率设置为初始值。</span><br><span class="line">调整倍数为 gamma 倍，调整间隔为 step_size。间隔单位是step。其中， step 通常是指 epoch，不是iteration</span><br></pre></td></tr></table></figure>
+
+<h4 id="按需调整学习率-MultiStepLR："><a href="#按需调整学习率-MultiStepLR：" class="headerlink" title="按需调整学习率 MultiStepLR："></a>按需调整学习率 MultiStepLR：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones, gamma=0.1, last_epoch=-1)</span><br><span class="line"># 参数</span><br><span class="line">milestones(list)- 一个 list，每一个元素代表何时调整学习率， list 元素必须是递增的。如 milestones=[30,80,120]</span><br><span class="line">gamma(float)- 学习率调整倍数，默认为 0.1 倍，即下降 10 倍。</span><br></pre></td></tr></table></figure>
+
+<h4 id="指数衰减调整学习率-ExponentialLR："><a href="#指数衰减调整学习率-ExponentialLR：" class="headerlink" title="指数衰减调整学习率 ExponentialLR："></a>指数衰减调整学习率 ExponentialLR：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma, last_epoch=-1)</span><br><span class="line"># 参数</span><br><span class="line">gamma- 学习率调整倍数的底，指数为 epoch，即 gamma**epoch</span><br><span class="line">lr=lr∗gamma∗∗epoch</span><br></pre></td></tr></table></figure>
+
+<h4 id="余弦退火调整学习率-CosineAnnealingLR："><a href="#余弦退火调整学习率-CosineAnnealingLR：" class="headerlink" title="余弦退火调整学习率 CosineAnnealingLR："></a>余弦退火调整学习率 CosineAnnealingLR：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max, eta_min=0, last_epoch=-1)</span><br><span class="line"># 参数</span><br><span class="line">T_max(int)- 一次学习率周期的迭代次数，即 T_max 个 epoch 之后重新设置学习率。</span><br><span class="line">eta_min(float)- 最小学习率，即在一个周期中，学习率最小会下降到 eta_min，默认值为 0。</span><br><span class="line">以余弦函数为周期，并在每个周期最大值时重新设置学习率。以初始学习率为最大学习率，以2∗Tmax 为周期，在一个周期内先下降，后上升。</span><br></pre></td></tr></table></figure>
+
+<h4 id="自适应调整学习率-ReduceLROnPlateau："><a href="#自适应调整学习率-ReduceLROnPlateau：" class="headerlink" title="自适应调整学习率 ReduceLROnPlateau："></a>自适应调整学习率 ReduceLROnPlateau：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode=&#x27;min&#x27;, factor=0.1, patience=10, verbose=False, threshold=0.0001, threshold_mode=&#x27;rel&#x27;, cooldown=0, min_lr=0, eps=1e-08)</span><br><span class="line"># 参数</span><br><span class="line">当某指标不再变化（下降或升高），调整学习率，这是非常实用的学习率调整策略。</span><br><span class="line">例如，当验证集的 loss 不再下降时，进行学习率调整；或者监测验证集的 accuracy，当accuracy 不再上升时，则调整学习率。</span><br><span class="line">mode(str)- 模式选择，有 min 和 max 两种模式， min 表示当指标不再降低(如监测loss)， max 表示当指标不再升高(如监测 accuracy)。</span><br><span class="line">factor(float)- 学习率调整倍数(等同于其它方法的 gamma)，即学习率更新为 lr = lr * factor</span><br><span class="line">patience(int)- 忍受该指标多少个 step 不变化，当忍无可忍时，调整学习率。</span><br><span class="line">verbose(bool)- 是否打印学习率信息， print(‘Epoch &#123;:5d&#125;: reducing learning rate of group &#123;&#125; to &#123;:.4e&#125;.’.format(epoch, i, new_lr))</span><br><span class="line">threshold_mode(str)- 选择判断指标是否达最优的模式，有两种模式， rel 和 abs。</span><br><span class="line">当 threshold_mode == rel，并且 mode == max 时， dynamic_threshold = best * ( 1 +threshold )；</span><br><span class="line">当 threshold_mode == rel，并且 mode == min 时， dynamic_threshold = best * ( 1 -threshold )；</span><br><span class="line">当 threshold_mode == abs，并且 mode== max 时， dynamic_threshold = best + threshold ；</span><br><span class="line">当 threshold_mode == rel，并且 mode == max 时， dynamic_threshold = best - threshold；</span><br><span class="line">threshold(float)- 配合 threshold_mode 使用。</span><br><span class="line">cooldown(int)- “冷却时间“，当调整学习率之后，让学习率调整策略冷静一下，让模型再训练一段时间，再重启监测模式。</span><br><span class="line">min_lr(float or list)- 学习率下限，可为 float，或者 list，当有多个参数组时，可用 list 进行设置。</span><br><span class="line">eps(float)- 学习率衰减的最小值，当学习率变化小于 eps 时，则不调整学习率。</span><br></pre></td></tr></table></figure>
+
+<h4 id="自定义调整学习率-LambdaLR："><a href="#自定义调整学习率-LambdaLR：" class="headerlink" title="自定义调整学习率 LambdaLR："></a>自定义调整学习率 LambdaLR：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda, last_epoch=-1)</span><br><span class="line"># 参数</span><br><span class="line">lr_lambda(function or list)- 一个计算学习率调整倍数的函数，输入通常为 step，当有多个参数组时，设为 list。</span><br><span class="line">lr=base_lr∗lmbda(self.last_epoch)</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/pytorch/" rel="tag"># pytorch</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/11/08/Value%20function%20of%20Reinforcement%20Learning/" rel="prev" title="Value Function of Reinforcement Learning">
+      <i class="fa fa-chevron-left"></i> Value Function of Reinforcement Learning
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/12/02/Markov%20Random%20Field/" rel="next" title="Markov Random Field">
+      Markov Random Field <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#torch-optim-%E5%87%BD%E6%95%B0%E4%BC%98%E5%8C%96%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">torch.optim 函数优化器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Optimizer%E6%9E%84%E5%BB%BA%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">Optimizer构建方式：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Optimizer%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">Optimizer使用方式：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Optimizer%E5%8F%82%E6%95%B0%EF%BC%9A"><span class="nav-number">1.3.</span> <span class="nav-text">Optimizer参数：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%A6%E4%B9%A0%E7%8E%87%E8%B0%83%E6%95%B4%E6%96%B9%E5%BC%8F%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">学习率调整方式：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%A6%E4%B9%A0%E7%8E%87%E8%B0%83%E6%95%B4%E7%AD%96%E7%95%A5%E5%88%86%E4%B8%BA%E4%B8%89%E5%A4%A7%E7%B1%BB%EF%BC%8C%E5%88%86%E5%88%AB%E6%98%AF"><span class="nav-number">2.1.</span> <span class="nav-text">学习率调整策略分为三大类，分别是</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%89%E9%97%B4%E9%9A%94%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87-StepLR%EF%BC%9A"><span class="nav-number">2.1.1.</span> <span class="nav-text">等间隔调整学习率 StepLR：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%89%E9%9C%80%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87-MultiStepLR%EF%BC%9A"><span class="nav-number">2.1.2.</span> <span class="nav-text">按需调整学习率 MultiStepLR：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E6%95%B0%E8%A1%B0%E5%87%8F%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87-ExponentialLR%EF%BC%9A"><span class="nav-number">2.1.3.</span> <span class="nav-text">指数衰减调整学习率 ExponentialLR：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%99%E5%BC%A6%E9%80%80%E7%81%AB%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87-CosineAnnealingLR%EF%BC%9A"><span class="nav-number">2.1.4.</span> <span class="nav-text">余弦退火调整学习率 CosineAnnealingLR：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E9%80%82%E5%BA%94%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87-ReduceLROnPlateau%EF%BC%9A"><span class="nav-number">2.1.5.</span> <span class="nav-text">自适应调整学习率 ReduceLROnPlateau：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E8%B0%83%E6%95%B4%E5%AD%A6%E4%B9%A0%E7%8E%87-LambdaLR%EF%BC%9A"><span class="nav-number">2.1.6.</span> <span class="nav-text">自定义调整学习率 LambdaLR：</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Gooqi</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Gooqi</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='150' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
